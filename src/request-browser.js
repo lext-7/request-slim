@@ -41,7 +41,7 @@ class BrowserRequest extends Request {
 
             xhr.onerror = (err) => {
                 callbacks.error(err);
-            };  
+            };
 
             xhr.send(params.body);
         };
@@ -57,25 +57,28 @@ Object.assign(BrowserRequest.defaultOptions, {
     withCredentials: true,
 });
 
-BrowserRequest.form = (url, method, data, params) => {
+BrowserRequest.serializers.form = (url, method, data) => {
     const queryString = BrowserRequest.queryString.stringify(data);
     if (['GET', 'DELETE'].indexOf(method) !== -1) {
         return {
-            path: `${params.path.indexOf('?') === -1 ? '?' : ''}${queryString}`,
+            url: `${url}${url.indexOf('?') === -1 ? '?' : ''}${queryString}`,
         };
-    } 
+    }
     return {
         body: queryString,
     };
 };
 
-BrowserRequest.json = (url, method, data) => {
+BrowserRequest.serializers.json = (url, method, data) => {
+    if (['GET', 'DELETE'].indexOf(method) !== -1) {
+        return BrowserRequest.serializers.form(url, method, data);
+    }
     return {
         body: JSON.stringify(data),
     };
 };
 
-BrowserRequest.serializers.json = (response, text) => JSON.parse(text);
-BrowserRequest.serializers.form = (response, text) => BrowserRequest.queryString.parse(buffer.toString(encoding));
+BrowserRequest.parsers.json = (response, text) => JSON.parse(text);
+BrowserRequest.parsers.form = (response, text) => BrowserRequest.queryString.parse(buffer.toString(encoding));
 
 module.exports = BrowserRequest;

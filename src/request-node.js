@@ -1,7 +1,7 @@
 const http = require('http');
 const https = require('https');
 const urlHelper = require('url');
-const qs= require('querystring');
+const qs = require('querystring');
 
 const Request = require('./request-abstract');
 
@@ -35,7 +35,7 @@ class NodeRequest extends Request {
             });
 
             if (params.body) {
-                req.write(writer(params.body));
+                req.write(params.body);
             }
 
             req.end();
@@ -78,6 +78,10 @@ class NodeRequest extends Request {
         });
     }
 
+    requestBody(...args) {
+        return this.request(...args).then(({ body }) => body);
+    }
+
     getResponseContentType(response) {
         return response.headers['content-type'] || this.constructor.contentTypes.text;
     }
@@ -88,11 +92,11 @@ NodeRequest.protocalDerivers = {
     https,
 };
 
-NodeRequest.form = (url, method, data, params) => {
+NodeRequest.serializers.form = (url, method, data, params) => {
     const queryString = qs.stringify(data);
     if (['GET', 'DELETE'].indexOf(method) !== -1) {
         return {
-            path: `${params.path.indexOf('?') === -1 ? '?' : ''}${queryString}`,
+            path: `${params.path}${params.path.indexOf('?') === -1 ? '?' : ''}${queryString}`,
         };
     }
     return {
@@ -100,7 +104,13 @@ NodeRequest.form = (url, method, data, params) => {
     };
 };
 
-NodeRequest.json = (url, method, data) => {
+NodeRequest.serializers.json = (url, method, data, params) => {
+    if (['GET', 'DELETE'].indexOf(method) !== -1) {
+        const queryString = qs.stringify(data);
+        return {
+            path: `${params.path}${params.path.indexOf('?') === -1 ? '?' : ''}${queryString}`,
+        };
+    }
     return {
         body: JSON.stringify(data),
     };
