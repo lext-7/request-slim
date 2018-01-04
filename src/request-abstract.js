@@ -19,11 +19,6 @@ class Request {
                 params.type = null;
             }
 
-            const encoding = params.encoding || 'utf8';
-            if (params.encoding) {
-                params.encoding = null;
-            }
-
             const driver = this.getDeriver(params);
 
             if (!driver) {
