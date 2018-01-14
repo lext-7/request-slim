@@ -1,6 +1,6 @@
 {
   "name": "request-slim",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Extremely lite request lib without any dependencies ! ONLY FOR SIMPLE REQUEST FUNCTIONS !",
   "main": "src/request-node.js",
   "scripts": {
