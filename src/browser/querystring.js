@@ -15,7 +15,7 @@ export const parse = (queryString) => {
         const keys = key.split('.');
         while (keys.length) {
             let top = keys.unshift();
-            
+
             if (keys.length !== 0 && typeof obj[top] === 'undefined') {
                 obj[top] = {};
             }
@@ -34,7 +34,7 @@ export const parse = (queryString) => {
 
     queryString.split('&').forEach((group) => {
         const pair = group.split('=');
-        
+
         const key = pair[0].replace(/(\[\])$/, '');
         const val = pair[1];
 

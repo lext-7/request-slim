@@ -1,5 +1,5 @@
 const Request = require('./request-abstract');
-const queryString = require('./querystring');
+const queryString = require('./browser/querystring');
 
 class BrowserRequest extends Request {
 

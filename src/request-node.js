@@ -2,6 +2,8 @@ const http = require('http');
 const https = require('https');
 const urlHelper = require('url');
 const qs = require('querystring');
+const { createTunnel } = require('./node/tunnel');
+const { toBase64 } = require('./node/helpers');
 
 const Request = require('./request-abstract');
 
@@ -9,11 +11,10 @@ class NodeRequest extends Request {
 
     getDeriver({ protocol }) {
         const constructor = this.constructor;
-        const driver = constructor.protocalDerivers[protocol.slice(0, -1)];
+        const driver = constructor.protocolDerivers[protocol.slice(0, -1)];
 
         return (params, callback) => {
             const req = driver.request(params);
-
             req.once('response', (res) => {
                 const data = [];
 
@@ -45,24 +46,6 @@ class NodeRequest extends Request {
     }
 
     request(params) {
-        let {
-            url
-        } = params;
-
-        url = urlHelper.parse(url);
-        if (/^https?\+unix:/.test(url.protocol) === true) {
-            // get the protocol
-            url.protocol = `${url.protocol.split('+')[0]}:`;
-            // get the socket, path
-            const unixParts = url.path.match(/^([^/]+)(.+)$/);
-            params.socketPath = unixParts[1].replace(/%2F/g, '/');
-            url.pathname = unixParts[2];
-        }
-
-        params.url = null;
-
-        Object.assign(params, url);
-
         return new Promise((resolve, reject) => {
             super.request(params, (err, body, response, request) => {
                 if (err) {
@@ -78,6 +61,61 @@ class NodeRequest extends Request {
         });
     }
 
+    handleParams(params) {
+        let {
+            url
+        } = params;
+
+        url = urlHelper.parse(url);
+        if (/^https?\+unix:/.test(url.protocol) === true) {
+            // get the protocol
+            url.protocol = `${url.protocol.split('+')[0]}:`;
+            // get the socket, path
+            const unixParts = url.path.match(/^([^/]+)(.+)$/);
+            params.socketPath = unixParts[1].replace(/%2F/g, '/');
+            url.pathname = unixParts[2];
+        }
+
+        if (params.autoSetHost) {
+            params.headers = params.headers || {};
+            params.headers.Host = url.host;
+        }
+
+        if (params.proxy) {
+            let proxy;
+            if (typeof params.proxy === 'function') {
+                params.proxy = params.proxy(params);
+            }
+            if (typeof params.proxy === 'string') {
+                proxy = urlHelper.parse(params.proxy)
+            } else {
+                proxy = params.proxy;
+            }
+            params.proxy = proxy;
+            if (params.tunnel === false) {
+                url.path = `${url.protocol}//${url.host}${url.path}`
+                url.protocol = proxy.protocol;
+                url.hostname = proxy.hostname;
+                url.host = proxy.host;
+                url.port = proxy.port
+                if (!params.headers) {
+                    params.headers = {};
+                }
+                if (proxy.auth && !params.headers['proxy-authorization']) {
+                    const proxyAuthPieces = proxy.auth.split(':').map(item => qs.unescape(item));
+                    const authHeader = 'Basic ' + toBase64(proxyAuthPieces.join(':'));
+                }
+            }
+        }
+
+        params.url = null;
+        Object.assign(params, url);
+
+        if (params.proxy && params.tunnel !== false) {
+            params.agent = createTunnel(params);
+        }
+    }
+
     requestBody(...args) {
         return this.request(...args).then(({ body }) => body);
     }
@@ -87,7 +125,7 @@ class NodeRequest extends Request {
     }
 }
 
-NodeRequest.protocalDerivers = {
+NodeRequest.protocolDerivers = {
     http,
     https,
 };

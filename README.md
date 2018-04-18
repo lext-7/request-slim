@@ -30,7 +30,7 @@ const request = new Request({
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.108 Safari/537.36',
     },
     /**
-     *  default response data type for all request 
+     *  default response data type for all request
      */
     dataType: 'application/json',
     /**
@@ -41,6 +41,13 @@ const request = new Request({
      * common request paramas.
      */
     options: {
+        proxy: () => 'http://127.0.0.1:8888',
+        proxy: 'http://127.0.0.1:8888',
+        proxy: {
+            host: '127.0.0.1',
+            protocol: 'http',
+            port: 8888,
+        },
     },
 });
 
