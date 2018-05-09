@@ -13,13 +13,17 @@ class Request {
 
         params = Object.assign({}, constructor.defaultOptions, this.options.options, params);
         params.headers = Object.assign({}, constructor.defaultHeaders, this.options.headers, params.headers);
-        if (params.type) {
-            const contentType = constructor.types[params.type];
+
+
+        this.handleParams(params);
+
+        const type = this.getType(params.type || this.options.type, params.headers['Content-Type']);
+
+        if (type) {
+            const contentType = constructor.contentTypes[type];
             params.headers['Content-Type'] = contentType;
             params.type = null;
         }
-
-        this.handleParams(params);
 
         const driver = this.getDeriver(params);
 
@@ -27,8 +31,6 @@ class Request {
             onError('not supported driver', null, null);
             return;
         }
-
-        const type = this.getType(params.type || this.options.type, params.headers['Content-Type']);
 
         const serializer = this.getSerializer(type);
 
@@ -62,16 +64,10 @@ class Request {
 
     getType(presetType, contentType) {
         const constructor = this.constructor;
-        if (presetType) {
-            if (typeof presetType === 'function') {
-                return presetType;
-            }
-            contentType = presetType;
-        }
 
         const contentTypes = constructor.contentTypes;
         for(let type in contentTypes) {
-            if (contentTypes[type] === contentType) {
+            if (contentTypes[type] === contentType || contentTypes[type] === presetType || type === presetType) {
                 return type;
             }
         }
