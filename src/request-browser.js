@@ -2,7 +2,6 @@ const Request = require('./request-abstract');
 const queryString = require('./browser/querystring');
 
 class BrowserRequest extends Request {
-
     getDeriver() {
         if (window.fetch) {
             return this.getFetchDeriver();
@@ -21,7 +20,11 @@ class BrowserRequest extends Request {
     getXHRDeriver() {
         return (params, callbacks) => {
             const xhr = new XMLHttpRequest();
-            xhr.open(params.method, encodeURIComponent(params.url), params.async);
+            xhr.open(
+                params.method,
+                encodeURIComponent(params.url),
+                params.async,
+            );
             xhr.withCredentials = params.withCredentials;
             Object.keys(params.headers).forEach(key => {
                 xhr.setRequestHeader(key, params.headers[key]);
@@ -39,7 +42,7 @@ class BrowserRequest extends Request {
                 }
             };
 
-            xhr.onerror = (err) => {
+            xhr.onerror = err => {
                 callbacks.error(err);
             };
 
@@ -61,7 +64,9 @@ BrowserRequest.serializers.form = (url, method, data) => {
     const queryString = BrowserRequest.queryString.stringify(data);
     if (['GET', 'DELETE'].indexOf(method) !== -1) {
         return {
-            url: `${url}${url.indexOf('?') === -1 ? '?' : ''}${queryString}`,
+            url: queryString
+                ? `${url}${url.indexOf('?') === -1 ? '?' : ''}${queryString}`
+                : url,
         };
     }
     return {
@@ -79,6 +84,7 @@ BrowserRequest.serializers.json = (url, method, data) => {
 };
 
 BrowserRequest.parsers.json = (response, text) => JSON.parse(text);
-BrowserRequest.parsers.form = (response, text) => BrowserRequest.queryString.parse(buffer.toString(encoding));
+BrowserRequest.parsers.form = (response, text) =>
+    BrowserRequest.queryString.parse(buffer.toString(encoding));
 
 module.exports = BrowserRequest;
