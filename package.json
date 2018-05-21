@@ -1,6 +1,6 @@
 {
   "name": "request-slim",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Extremely lite request lib without any dependencies ! ONLY FOR SIMPLE REQUEST FUNCTIONS !",
   "main": "src/request-node.js",
   "scripts": {
@@ -24,5 +24,8 @@
     "mocha": "^4.0.1",
     "server-destroy": "^1.0.1",
     "webpack": "^3.8.1"
+  },
+  "dependencies": {
+    "tunnel-agent": "^0.6.0"
   }
 }
