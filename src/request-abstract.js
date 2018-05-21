@@ -1,3 +1,6 @@
+
+const { mergeParams } = require('./utils');
+
 class Request {
 
     constructor(options) {
@@ -99,11 +102,11 @@ Request.contentTypes = {
 };
 
 Request.defaultOptions = {
-    method: 'GET'
+    method: 'GET',
 };
 
 Request.defaultHeaders = {
-    'Content-Type': Request.contentTypes.text,
+    'Content-Type': Request.contentTypes.form,
 };
 
 Request.serializers = {
@@ -111,5 +114,7 @@ Request.serializers = {
 
 Request.parsers = {
 };
+
+Request.mergeParams = mergeParams;
 
 module.exports = Request;
