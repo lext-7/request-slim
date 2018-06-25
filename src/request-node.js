@@ -134,7 +134,7 @@ NodeRequest.serializers.form = (url, method, data, params) => {
     const queryString = qs.stringify(data);
     if (['GET', 'DELETE'].indexOf(method) !== -1) {
         return {
-            path: `${params.path}${params.path.indexOf('?') === -1 ? '?' : ''}${queryString}`,
+            path: queryString ? `${params.path}${params.path.indexOf('?') === -1 ? '?' : ''}${queryString}` : params.path,
         };
     }
     return {

@@ -1,26 +1,36 @@
-
 const { mergeParams } = require('./utils');
 
 class Request {
-
     constructor(options) {
         this.options = options || {};
     }
 
     getDeriver() {
         throw new Error('abstrct function!');
-    };
+    }
 
     request(params, callback) {
         const constructor = this.constructor;
 
-        params = Object.assign({}, constructor.defaultOptions, this.options.options, params);
-        params.headers = Object.assign({}, constructor.defaultHeaders, this.options.headers, params.headers);
-
+        params = Object.assign(
+            {},
+            constructor.defaultOptions,
+            this.options.options,
+            params,
+        );
+        params.headers = Object.assign(
+            {},
+            constructor.defaultHeaders,
+            this.options.headers,
+            params.headers,
+        );
 
         this.handleParams(params);
 
-        const type = this.getType(params.type || this.options.type, params.headers['Content-Type']);
+        const type = this.getType(
+            params.type || this.options.type,
+            params.headers['Content-Type'],
+        );
 
         if (type) {
             const contentType = constructor.contentTypes[type];
@@ -37,8 +47,32 @@ class Request {
 
         const serializer = this.getSerializer(type);
 
+        const method = params.method.toUpperCase();
+
         if (serializer) {
-            Object.assign(params, serializer(params.url, params.method, params.data, params));
+            Object.assign(
+                params,
+                serializer(
+                    params.url,
+                    params.method,
+                    method === 'GET'
+                        ? params.data || params.query
+                        : params.data,
+                    params,
+                ),
+            );
+        }
+        if (method === 'POST' && params.query) {
+            Object.assign(
+                params,
+                this.getSerializer('form')(
+                    params.url,
+                    'GET',
+                    params.query,
+                    params,
+                ),
+            );
+            params.query = null;
         }
 
         params.data = null;
@@ -54,7 +88,10 @@ class Request {
                 return;
             }
 
-            const responseType = this.getType(params.dataType || this.options.dataType, this.getResponseContentType(response).split(';')[0]);
+            const responseType = this.getType(
+                params.dataType || this.options.dataType,
+                this.getResponseContentType(response).split(';')[0],
+            );
             const parser = this.getParser(responseType);
             try {
                 const body = parser ? parser(response, data, params) : data;
@@ -69,8 +106,12 @@ class Request {
         const constructor = this.constructor;
 
         const contentTypes = constructor.contentTypes;
-        for(let type in contentTypes) {
-            if (contentTypes[type] === contentType || contentTypes[type] === presetType || type === presetType) {
+        for (let type in contentTypes) {
+            if (
+                contentTypes[type] === contentType ||
+                contentTypes[type] === presetType ||
+                type === presetType
+            ) {
                 return type;
             }
         }
@@ -90,9 +131,7 @@ class Request {
         throw new Error('abstract function!!');
     }
 
-    handleParams(params) {
-
-    }
+    handleParams(params) {}
 }
 
 Request.contentTypes = {
@@ -109,11 +148,9 @@ Request.defaultHeaders = {
     'Content-Type': Request.contentTypes.form,
 };
 
-Request.serializers = {
-};
+Request.serializers = {};
 
-Request.parsers = {
-};
+Request.parsers = {};
 
 Request.mergeParams = mergeParams;
 
